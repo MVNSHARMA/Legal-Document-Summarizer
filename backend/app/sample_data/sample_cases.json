@@ -1,0 +1,28 @@
+[
+  {
+    "case_id": "CJ-001",
+    "title": "State v. Sharma - Cheating under Section 420 IPC",
+    "document_type": "court_judgment",
+    "text": "IN THE HIGH COURT OF XYZ. State v. Sharma. This criminal appeal concerns allegations of cheating under Section 420 of the Indian Penal Code. The Court examines the factual matrix, the evidence led by the prosecution and defence, and the applicability of Section 420 IPC in light of prior precedents."
+  },
+  {
+    "case_id": "CT-001",
+    "title": "Service Agreement between ABC Pvt Ltd and XYZ LLP",
+    "document_type": "contract",
+    "text": "THIS SERVICE AGREEMENT is made on this 5th day of January 2023 between ABC Pvt Ltd (hereinafter referred to as the 'Service Provider') and XYZ LLP (hereinafter referred to as the 'Client'). The parties agree to the following terms and conditions, including scope of services, consideration, indemnity, and termination."
+  },
+  {
+    "case_id": "FIR-001",
+    "title": "FIR No. 123/2024 relating to alleged theft",
+    "document_type": "fir_or_notice",
+    "text": "FIRST INFORMATION REPORT. FIR No. 123/2024. Police Station: Central. Complainant alleges that on 12 March 2024, unknown persons committed theft of valuable property. The report narrates the sequence of events, description of suspects, and sections invoked under the IPC."
+  },
+  {
+    "case_id": "OTH-001",
+    "title": "Legal Notice for Breach of Non-Disclosure Obligations",
+    "document_type": "other",
+    "text": "LEGAL NOTICE. Whereas you have failed to comply with your obligations under the Non-Disclosure Agreement dated 10 February 2022, we hereby call upon you to cease and desist from any further disclosure of confidential information, failing which our client shall initiate appropriate legal proceedings."
+  }
+]
+
+
