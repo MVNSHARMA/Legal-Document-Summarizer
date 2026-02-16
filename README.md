@@ -92,5 +92,3 @@ The final structured result is returned to the frontend as a single `AnalysisRes
 
 - The NLP and heuristic rules in this project are **illustrative** and should be tuned for your jurisdiction and data.
 - Always have a human lawyer review outputs. This tool does not provide legal advice or predict outcomes.
-
-
