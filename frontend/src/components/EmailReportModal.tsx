@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getToken } from "../api/auth";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL || "https://lexanalyze-backend.onrender.com";
 
 // ─── Email validation ─────────────────────────────────────────────────────────
 function isValidEmail(email: string): boolean {

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL || "https://lexanalyze-backend.onrender.com";
 console.log("[Auth] API_BASE:", API_BASE);
 
 // Keep alias so existing axios calls below don't need renaming

@@ -2,7 +2,7 @@ import axios from "axios";
 import type { AnalysisResponse } from "../types";
 import { getToken } from "./auth";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://lexanalyze-backend.onrender.com";
 console.log("[Client] API_BASE_URL:", API_BASE_URL);
 
 export async function analyzeDocument(
