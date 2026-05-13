@@ -1,387 +1,261 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { googleLogin, loginUser } from "../api/auth";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-// ─── Google icon (inline SVG, no extra dep) ───────────────────────────────────
-const GoogleIcon: React.FC = () => (
-  <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-  </svg>
-);
+const API_BASE = import.meta.env.VITE_API_URL || "https://lexanalyze-backend.onrender.com";
 
-// ─── Eye icons ────────────────────────────────────────────────────────────────
-const EyeIcon: React.FC<{ open: boolean }> = ({ open }) =>
-  open ? (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ) : (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-      <line x1="1" y1="1" x2="23" y2="23" />
-    </svg>
-  );
-
-// ─── Component ────────────────────────────────────────────────────────────────
-const LoginPage: React.FC = () => {
+export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login } = useAuth();
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handle Google OAuth callback: /login?token=...
+  // ── Handle Google OAuth callback token ──────────────────────────────────────
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get("token");
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get("token");
+
     if (token) {
-      // Save token to localStorage immediately
+      console.log("[LoginPage] Token received from Google OAuth");
+      // Save token directly to localStorage
       localStorage.setItem("lex_token", token);
-      // Clear the token from the URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-      // Force hard redirect to dashboard
-      window.location.href = "/dashboard";
+      // Hard redirect — bypasses React Router entirely so no auth race condition
+      window.location.replace("/dashboard");
       return;
+    }
+
+    // Already logged in — skip the login page
+    const existingToken = localStorage.getItem("lex_token");
+    if (existingToken) {
+      navigate("/dashboard", { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Already logged in (e.g. returning with a stored session)
-  useEffect(() => {
-    if (isAuthenticated) navigate("/dashboard", { replace: true });
-  }, [isAuthenticated, navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  // ── Email / password login ───────────────────────────────────────────────────
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+    setError("");
+    setLoading(true);
     try {
-      const { access_token } = await loginUser(email, password);
-      await login(access_token);
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.detail || "Login failed");
+        return;
+      }
+      localStorage.setItem("lex_token", data.access_token);
+      await login(data.access_token);
       navigate("/dashboard", { replace: true });
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
-        "Sign in failed. Please check your credentials.";
-      setError(msg);
+    } catch {
+      setError("Network error. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
+  const handleGoogleLogin = () => {
+    window.location.href = `${API_BASE}/api/auth/google`;
+  };
+
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div style={styles.page}>
-      {/* ── Left sidebar ── */}
-      <aside style={styles.sidebar} className="auth-sidebar">
-        <div style={styles.sidebarInner}>
-          <div style={styles.logoRow}>
-            <span style={styles.logoIcon} aria-hidden="true">⚖️</span>
-            <span style={styles.logoText}>LexAnalyze</span>
-          </div>
-          <p style={styles.tagline}>Legal Document Intelligence</p>
-          <p style={styles.sidebarSub}>
-            AI-powered analysis for legal professionals. Understand complex documents in minutes.
-          </p>
+    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "system-ui, sans-serif" }}>
+
+      {/* ── Left navy panel ── */}
+      <div
+        className="auth-sidebar"
+        style={{
+          width: "38%",
+          background: "#0f2744",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "48px",
+          color: "white",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <span style={{ fontSize: 32 }}>⚖</span>
+          <span style={{ fontSize: 24, fontWeight: 700, color: "#c9a84c" }}>LexAnalyze</span>
         </div>
-        <p style={styles.disclaimer}>
-          For informational use only. Does not constitute legal advice.
+        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, lineHeight: 1.6 }}>
+          Legal Document Intelligence for Indian Courts
         </p>
-      </aside>
+        <div style={{ marginTop: 48 }}>
+          {["AI-powered analysis", "12 Indian languages", "Chat with documents", "Legal templates"].map(f => (
+            <div
+              key={f}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 14,
+                color: "rgba(255,255,255,0.8)",
+                fontSize: 14,
+              }}
+            >
+              <span style={{ color: "#c9a84c" }}>✓</span>
+              {f}
+            </div>
+          ))}
+        </div>
+      </div>
 
-      {/* ── Right panel ── */}
-      <main style={styles.panel}>
-        <div style={styles.formBox}>
-          <h1 style={styles.heading}>Welcome back</h1>
-          <p style={styles.subtext}>Sign in to your account</p>
+      {/* ── Right white panel ── */}
+      <div style={{
+        flex: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#f4f6f9",
+        padding: "32px",
+      }}>
+        <div style={{
+          background: "white",
+          borderRadius: 16,
+          padding: "48px",
+          width: "100%",
+          maxWidth: 420,
+          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+        }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#0f2744", margin: "0 0 8px" }}>
+            Welcome back
+          </h1>
+          <p style={{ color: "#6b7280", fontSize: 14, margin: "0 0 32px" }}>
+            Sign in to your LexAnalyze account
+          </p>
 
-          <form onSubmit={handleSubmit} noValidate style={styles.form}>
-            {/* Email */}
-            <div style={styles.fieldGroup}>
-              <label htmlFor="email" style={styles.label}>Email address</label>
+          {/* Error banner */}
+          {error && (
+            <div style={{
+              background: "#fef2f2",
+              border: "1px solid #fca5a5",
+              borderRadius: 8,
+              padding: "12px 16px",
+              color: "#dc2626",
+              fontSize: 14,
+              marginBottom: 16,
+            }}>
+              {error}
+            </div>
+          )}
+
+          {/* Email / password form */}
+          <form onSubmit={handleEmailLogin}>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{
+                display: "block", fontSize: 13, fontWeight: 500,
+                color: "#374151", marginBottom: 6,
+              }}>
+                Email
+              </label>
               <input
-                id="email"
                 type="email"
-                autoComplete="email"
-                required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={styles.input}
-                placeholder="you@example.com"
+                onChange={e => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+                style={{
+                  width: "100%", padding: "10px 14px",
+                  border: "1px solid #d1d5db", borderRadius: 8,
+                  fontSize: 14, outline: "none", boxSizing: "border-box",
+                }}
               />
             </div>
 
-            {/* Password */}
-            <div style={styles.fieldGroup}>
-              <label htmlFor="password" style={styles.label}>Password</label>
-              <div style={styles.passwordWrapper}>
+            <div style={{ marginBottom: 24 }}>
+              <label style={{
+                display: "block", fontSize: 13, fontWeight: 500,
+                color: "#374151", marginBottom: 6,
+              }}>
+                Password
+              </label>
+              <div style={{ position: "relative" }}>
                 <input
-                  id="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{ ...styles.input, paddingRight: "2.8rem" }}
+                  onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  required
+                  style={{
+                    width: "100%", padding: "10px 40px 10px 14px",
+                    border: "1px solid #d1d5db", borderRadius: 8,
+                    fontSize: 14, outline: "none", boxSizing: "border-box",
+                  }}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  style={styles.eyeBtn}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: "absolute", right: 12, top: "50%",
+                    transform: "translateY(-50%)", background: "none",
+                    border: "none", cursor: "pointer", color: "#6b7280", fontSize: 13,
+                  }}
                 >
-                  <EyeIcon open={showPassword} />
+                  {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
             </div>
 
-            {/* Error */}
-            {error && <div style={styles.errorBanner} role="alert">{error}</div>}
-
-            {/* Submit */}
             <button
               type="submit"
-              disabled={isSubmitting}
-              style={isSubmitting ? { ...styles.submitBtn, opacity: 0.7 } : styles.submitBtn}
+              disabled={loading}
+              style={{
+                width: "100%", padding: "12px",
+                background: loading ? "#6b7280" : "#0f2744",
+                color: "#c9a84c", border: "none", borderRadius: 8,
+                fontSize: 15, fontWeight: 600,
+                cursor: loading ? "not-allowed" : "pointer",
+                marginBottom: 16,
+              }}
             >
-              {isSubmitting ? "Signing in…" : "Sign In"}
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
           {/* Divider */}
-          <div style={styles.dividerRow}>
-            <span style={styles.dividerLine} />
-            <span style={styles.dividerText}>or</span>
-            <span style={styles.dividerLine} />
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
+            <span style={{ color: "#9ca3af", fontSize: 13 }}>or</span>
+            <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
           </div>
 
-          {/* Google */}
-          <button type="button" onClick={googleLogin} style={styles.googleBtn}>
-            <GoogleIcon />
+          {/* Google button */}
+          <button
+            onClick={handleGoogleLogin}
+            style={{
+              width: "100%", padding: "12px", background: "white",
+              color: "#374151", border: "1.5px solid #d1d5db", borderRadius: 8,
+              fontSize: 14, fontWeight: 500, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              gap: 10, marginBottom: 24,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+            </svg>
             Continue with Google
           </button>
 
-          {/* Register link */}
-          <p style={styles.switchText}>
+          <p style={{ textAlign: "center", color: "#6b7280", fontSize: 14, margin: 0 }}>
             Don't have an account?{" "}
-            <Link to="/register" style={styles.link}>Register</Link>
+            <Link to="/register" style={{ color: "#0f2744", fontWeight: 600 }}>
+              Register
+            </Link>
           </p>
         </div>
-      </main>
+      </div>
     </div>
   );
-};
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-const NAVY = "#0f2744";
-const GOLD = "#c9a84c";
-const WHITE = "#ffffff";
-const LIGHT_GRAY = "#f4f6f9";
-const BORDER = "#d1d9e6";
-const TEXT_DARK = "#1a2a3a";
-const TEXT_MID = "#4a5568";
-
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    display: "flex",
-    minHeight: "100vh",
-    fontFamily: "Georgia, 'Times New Roman', serif",
-    background: LIGHT_GRAY,
-  },
-  sidebar: {
-    width: "38%",
-    minWidth: 280,
-    background: NAVY,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    padding: "3rem 2.5rem",
-    color: WHITE,
-  },
-  sidebarInner: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "1.25rem",
-  },
-  logoRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.75rem",
-  },
-  logoIcon: {
-    fontSize: "2rem",
-  },
-  logoText: {
-    fontSize: "1.75rem",
-    fontWeight: 700,
-    color: GOLD,
-    letterSpacing: "0.04em",
-  },
-  tagline: {
-    fontSize: "1.35rem",
-    fontWeight: 600,
-    color: GOLD,
-    margin: 0,
-    lineHeight: 1.3,
-  },
-  sidebarSub: {
-    fontSize: "0.95rem",
-    color: "rgba(255,255,255,0.72)",
-    lineHeight: 1.7,
-    margin: 0,
-  },
-  disclaimer: {
-    fontSize: "0.75rem",
-    color: "rgba(255,255,255,0.4)",
-    margin: 0,
-    lineHeight: 1.5,
-  },
-  panel: {
-    flex: 1,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "2rem 1.5rem",
-    background: WHITE,
-  },
-  formBox: {
-    width: "100%",
-    maxWidth: 420,
-  },
-  heading: {
-    fontSize: "1.9rem",
-    fontWeight: 700,
-    color: TEXT_DARK,
-    margin: "0 0 0.35rem",
-  },
-  subtext: {
-    fontSize: "0.95rem",
-    color: TEXT_MID,
-    margin: "0 0 2rem",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "1.1rem",
-  },
-  fieldGroup: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.4rem",
-  },
-  label: {
-    fontSize: "0.85rem",
-    fontWeight: 600,
-    color: TEXT_DARK,
-    fontFamily: "system-ui, sans-serif",
-  },
-  input: {
-    width: "100%",
-    padding: "0.7rem 0.9rem",
-    fontSize: "0.95rem",
-    border: `1.5px solid ${BORDER}`,
-    borderRadius: "0.5rem",
-    outline: "none",
-    color: TEXT_DARK,
-    background: WHITE,
-    fontFamily: "system-ui, sans-serif",
-    boxSizing: "border-box",
-    transition: "border-color 0.15s",
-  },
-  passwordWrapper: {
-    position: "relative",
-  },
-  eyeBtn: {
-    position: "absolute",
-    right: "0.75rem",
-    top: "50%",
-    transform: "translateY(-50%)",
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    color: TEXT_MID,
-    display: "flex",
-    alignItems: "center",
-    padding: 0,
-  },
-  errorBanner: {
-    padding: "0.65rem 0.85rem",
-    borderRadius: "0.5rem",
-    background: "rgba(220,38,38,0.08)",
-    border: "1px solid rgba(220,38,38,0.35)",
-    color: "#b91c1c",
-    fontSize: "0.85rem",
-    fontFamily: "system-ui, sans-serif",
-  },
-  submitBtn: {
-    padding: "0.8rem",
-    background: NAVY,
-    color: GOLD,
-    border: "none",
-    borderRadius: "0.5rem",
-    fontSize: "1rem",
-    fontWeight: 700,
-    cursor: "pointer",
-    letterSpacing: "0.04em",
-    fontFamily: "Georgia, serif",
-    transition: "opacity 0.15s",
-    marginTop: "0.25rem",
-  },
-  dividerRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.75rem",
-    margin: "1.5rem 0",
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    background: BORDER,
-    display: "block",
-  },
-  dividerText: {
-    fontSize: "0.8rem",
-    color: TEXT_MID,
-    fontFamily: "system-ui, sans-serif",
-  },
-  googleBtn: {
-    width: "100%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "0.65rem",
-    padding: "0.75rem",
-    background: WHITE,
-    border: `1.5px solid ${BORDER}`,
-    borderRadius: "0.5rem",
-    fontSize: "0.95rem",
-    fontWeight: 600,
-    color: TEXT_DARK,
-    cursor: "pointer",
-    fontFamily: "system-ui, sans-serif",
-    transition: "background 0.15s",
-  },
-  switchText: {
-    textAlign: "center",
-    fontSize: "0.88rem",
-    color: TEXT_MID,
-    marginTop: "1.5rem",
-    fontFamily: "system-ui, sans-serif",
-  },
-  link: {
-    color: NAVY,
-    fontWeight: 700,
-    textDecoration: "none",
-    borderBottom: `1px solid ${GOLD}`,
-  },
-};
-
-export default LoginPage;
+}

@@ -30,7 +30,6 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
         justifyContent: "center",
         alignItems: "center",
         height: "100vh",
-        background: "#f4f6f9",
       }}>
         <div style={{
           width: 40,

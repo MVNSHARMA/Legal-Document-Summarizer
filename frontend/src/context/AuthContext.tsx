@@ -75,16 +75,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       try {
-        const userData = await fetchUser(savedToken);
+        const response = await fetch(`${API_BASE}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${savedToken}` },
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setTokenState(savedToken);
+          setToken(savedToken);
+          setUser(userData);
+          setIsAuthenticated(true);
+        } else {
+          // 401/403 — token is genuinely invalid, clear it
+          localStorage.removeItem("lex_token");
+          setIsAuthenticated(false);
+        }
+      } catch {
+        // Network error (CORS, backend cold start, offline) —
+        // keep the token and grant access; the app will retry on next action
+        console.warn("[AuthContext] Network error during init — keeping token");
         setTokenState(savedToken);
         setToken(savedToken);
-        setUser(userData);
         setIsAuthenticated(true);
-      } catch (error) {
-        console.error("Auth init error:", error);
-        // Token may be expired — clear it
-        localStorage.removeItem("lex_token");
-        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
