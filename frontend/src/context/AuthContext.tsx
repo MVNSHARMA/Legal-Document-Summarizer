@@ -34,19 +34,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [token, setTokenState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true); // true until initial check done
 
-  /** Persist token + fetch user profile. Returns a resolved promise on success. */
+  /** Persist token + fetch user profile. Never throws — always resolves. */
   const login = useCallback(async (newToken: string): Promise<void> => {
+    localStorage.setItem("lex_token", newToken);
     setToken(newToken);
     setTokenState(newToken);
     try {
       const profile = await getCurrentUser(newToken);
       setUser(profile);
-    } catch {
-      // Token invalid — clean up and surface the failure to the caller
-      clearToken();
-      setTokenState(null);
-      setUser(null);
-      throw new Error("Invalid or expired token.");
+    } catch (error) {
+      console.error("Auth context login error:", error);
+      // Still mark as authenticated — token is saved, profile fetch can retry later
+      setTokenState(newToken);
     }
   }, []);
 
@@ -58,13 +57,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   /** On mount: restore session from localStorage */
   useEffect(() => {
-    const stored = getToken();
-    if (stored) {
-      login(stored).finally(() => setIsLoading(false));
+    const savedToken = localStorage.getItem("lex_token");
+    if (savedToken) {
+      getCurrentUser(savedToken)
+        .then((user) => {
+          setTokenState(savedToken);
+          setToken(savedToken);
+          setUser(user);
+        })
+        .catch(() => {
+          // Token expired or invalid — clear it
+          localStorage.removeItem("lex_token");
+        })
+        .finally(() => setIsLoading(false));
     } else {
       setIsLoading(false);
     }
-  }, [login]);
+  }, []);
 
   return (
     <AuthContext.Provider

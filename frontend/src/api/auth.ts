@@ -64,10 +64,17 @@ export function googleLogin(): void {
 }
 
 export async function getCurrentUser(token: string): Promise<AuthUser> {
-  const { data } = await axios.get<AuthUser>(`${API_BASE_URL}/api/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+  const response = await fetch(`${API_BASE}/api/auth/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
   });
-  return data;
+  if (!response.ok) {
+    throw new Error(`Failed to get user: ${response.status}`);
+  }
+  return response.json();
 }
 
 export async function updateProfile(

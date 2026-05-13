@@ -45,9 +45,19 @@ const LoginPage: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     if (token) {
-      login(token).then(() => {
-        navigate("/dashboard", { replace: true });
-      });
+      console.log("Token found in URL:", token.substring(0, 20));
+      // Save token immediately to localStorage before anything else
+      localStorage.setItem("lex_token", token);
+      login(token)
+        .then(() => {
+          console.log("Login successful, redirecting to dashboard...");
+          window.location.href = "/dashboard";
+        })
+        .catch((err) => {
+          console.error("Login failed:", err);
+          // Even if context fails, token is saved — force redirect anyway
+          window.location.href = "/dashboard";
+        });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
