@@ -49,6 +49,27 @@ const InnerApp: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const handleReset = () => setAnalysisResult(null);
 
+  // Ping backend every 14 minutes to keep Render free tier awake
+  // (Render sleeps after 15 minutes of inactivity)
+  useEffect(() => {
+    const pingBackend = async () => {
+      try {
+        const API_BASE = import.meta.env.VITE_API_URL || "https://lexanalyze-backend.onrender.com";
+        await fetch(`${API_BASE}/health`);
+        console.log("[KeepAlive] Backend pinged");
+      } catch {
+        // Silent fail — don't disrupt the app if ping fails
+      }
+    };
+
+    // Ping immediately on load
+    pingBackend();
+
+    // Then ping every 14 minutes
+    const interval = setInterval(pingBackend, 14 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // On first load: purge old-schema history, apply saved theme + font size
   useEffect(() => {
     clearOldHistory();
