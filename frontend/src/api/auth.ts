@@ -1,10 +1,7 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://lexanalyze-backend.onrender.com";
-console.log("[Auth] API_BASE:", API_BASE);
-
-// Keep alias so existing axios calls below don't need renaming
-const API_BASE_URL = API_BASE;
+export const API_BASE = import.meta.env.VITE_API_URL || "https://lexanalyze-backend.onrender.com";
+console.log("[AUTH] Using API:", API_BASE);
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 const TOKEN_KEY = "lex_token";
@@ -41,7 +38,7 @@ export async function registerUser(
   password: string,
   fullName: string
 ): Promise<TokenResponse> {
-  const { data } = await axios.post<TokenResponse>(`${API_BASE_URL}/api/auth/register`, {
+  const { data } = await axios.post<TokenResponse>(`${API_BASE}/api/auth/register`, {
     email,
     password,
     full_name: fullName,
@@ -54,7 +51,7 @@ export async function loginUser(
   email: string,
   password: string
 ): Promise<TokenResponse> {
-  const { data } = await axios.post<TokenResponse>(`${API_BASE_URL}/api/auth/login`, {
+  const { data } = await axios.post<TokenResponse>(`${API_BASE}/api/auth/login`, {
     email,
     password,
   });
@@ -64,7 +61,7 @@ export async function loginUser(
 
 export function googleLogin(): void {
   // Full-page redirect — backend handles the OAuth flow
-  window.location.href = `${API_BASE_URL}/api/auth/google`;
+  window.location.href = `${API_BASE}/api/auth/google`;
 }
 
 export async function getCurrentUser(token: string): Promise<AuthUser> {
@@ -85,7 +82,7 @@ export async function updateProfile(
   fullName: string
 ): Promise<AuthUser> {
   const { data } = await axios.put<AuthUser>(
-    `${API_BASE_URL}/api/auth/profile`,
+    `${API_BASE}/api/auth/profile`,
     { full_name: fullName },
     { headers: { Authorization: `Bearer ${token}` } },
   );
@@ -98,14 +95,14 @@ export async function updatePassword(
   newPassword: string
 ): Promise<void> {
   await axios.put(
-    `${API_BASE_URL}/api/auth/password`,
+    `${API_BASE}/api/auth/password`,
     { current_password: currentPassword, new_password: newPassword },
     { headers: { Authorization: `Bearer ${token}` } },
   );
 }
 
 export async function deleteAccount(token: string): Promise<void> {
-  await axios.delete(`${API_BASE_URL}/api/auth/account`, {
+  await axios.delete(`${API_BASE}/api/auth/account`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 }

@@ -43,18 +43,15 @@ const LoginPage: React.FC = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get("token");
-    if (!token) return;
-
-    console.log("[Login] Google token received");
-
-    // Clear URL params immediately so token doesn't linger in the address bar
-    window.history.replaceState({}, document.title, "/login");
-
-    // Save token to localStorage
-    localStorage.setItem("lex_token", token);
-
-    // Hard redirect — forces a full page reload which picks up the token
-    window.location.replace("/dashboard");
+    if (token) {
+      // Save token to localStorage immediately
+      localStorage.setItem("lex_token", token);
+      // Clear the token from the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Force hard redirect to dashboard
+      window.location.href = "/dashboard";
+      return;
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Already logged in (e.g. returning with a stored session)

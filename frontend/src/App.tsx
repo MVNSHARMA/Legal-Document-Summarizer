@@ -26,17 +26,25 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (isLoading) {
     return (
       <div style={{
-        minHeight: "100vh",
         display: "flex",
-        alignItems: "center",
         justifyContent: "center",
-        background: "var(--gray-bg)",
+        alignItems: "center",
+        height: "100vh",
+        background: "#f4f6f9",
       }}>
-        <div className="gold-spinner" />
+        <div style={{
+          width: 40,
+          height: 40,
+          border: "3px solid #c9a84c",
+          borderTop: "3px solid transparent",
+          borderRadius: "50%",
+          animation: "spin 1s linear infinite",
+        }} />
       </div>
     );
   }
 
+  // Allow access if authenticated OR has token in storage
   if (!isAuthenticated && !hasToken) {
     return <Navigate to="/login" replace />;
   }

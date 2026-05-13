@@ -7,10 +7,9 @@ import React, {
 } from "react";
 import {
   clearToken,
-  getCurrentUser,
-  getToken,
   setToken,
   type AuthUser,
+  API_BASE,
 } from "../api/auth";
 
 // ─── Shape ────────────────────────────────────────────────────────────────────
@@ -32,47 +31,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setTokenState] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // true until initial check done
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  /** Fetch user profile from backend */
+  const fetchUser = async (savedToken: string): Promise<AuthUser> => {
+    const response = await fetch(`${API_BASE}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${savedToken}` },
+    });
+    if (!response.ok) throw new Error(`Auth failed: ${response.status}`);
+    return response.json();
+  };
 
   /** Persist token + fetch user profile. Never throws — always resolves. */
   const login = useCallback(async (newToken: string): Promise<void> => {
     localStorage.setItem("lex_token", newToken);
     setToken(newToken);
     setTokenState(newToken);
+    setIsAuthenticated(true); // mark authenticated immediately
     try {
-      const profile = await getCurrentUser(newToken);
-      setUser(profile);
+      const userData = await fetchUser(newToken);
+      setUser(userData);
     } catch (error) {
       console.error("Auth context login error:", error);
-      // Still mark as authenticated — token is saved, profile fetch can retry later
-      setTokenState(newToken);
+      // Keep authenticated — token is valid even if profile fetch fails
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const logout = useCallback(() => {
     clearToken();
     setTokenState(null);
     setUser(null);
+    setIsAuthenticated(false);
   }, []);
 
   /** On mount: restore session from localStorage */
   useEffect(() => {
-    const savedToken = localStorage.getItem("lex_token");
-    if (savedToken) {
-      getCurrentUser(savedToken)
-        .then((user) => {
-          setTokenState(savedToken);
-          setToken(savedToken);
-          setUser(user);
-        })
-        .catch(() => {
-          // Token expired or invalid — clear it
-          localStorage.removeItem("lex_token");
-        })
-        .finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
-    }
+    const initAuth = async () => {
+      const savedToken = localStorage.getItem("lex_token");
+      if (!savedToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const userData = await fetchUser(savedToken);
+        setTokenState(savedToken);
+        setToken(savedToken);
+        setUser(userData);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Auth init error:", error);
+        // Token may be expired — clear it
+        localStorage.removeItem("lex_token");
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
   return (
@@ -80,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         user,
         token,
-        isAuthenticated: !!user,
+        isAuthenticated,
         isLoading,
         login,
         logout,
