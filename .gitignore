@@ -1,19 +1,73 @@
-# macOS
-.DS_Store
+# ==========================================
+# ENVIRONMENT FILES - NEVER COMMIT THESE
+# ==========================================
+backend/.env
+frontend/.env
+.env
 
-# Python
+# ==========================================
+# PYTHON
+# ==========================================
+.venv/
+venv/
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
-backend/.venv/
+*.pyd
+.Python
 *.egg-info/
 dist/
 build/
+*.so
+.pytest_cache/
 
-# Node
+# ==========================================
+# NODE / FRONTEND
+# ==========================================
+node_modules/
 frontend/node_modules/
 frontend/dist/
+frontend/build/
+.next/
+.nuxt/
 
-# Misc
-*.docx
+# ==========================================
+# USER DATA - NEVER COMMIT
+# ==========================================
+backend/data/users.json
+backend/data/*.json
+data/
+data/*.json
+
+# ==========================================
+# UPLOADED FILES
+# ==========================================
+backend/uploads/*.pdf
+*.PDF
+
+# ==========================================
+# OS FILES
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V7
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==========================================
+# IDE FILES
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ==========================================
+# LOGS
+# ==========================================
 *.log
+logs/
+npm-debug.log*

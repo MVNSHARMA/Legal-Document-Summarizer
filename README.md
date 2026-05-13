@@ -1,94 +1,206 @@
-## Legal Document Analyzer & Intelligent Case Summarizer
+# LexAnalyze — Legal Document Intelligence
 
-This is a reference implementation of a **production-style full-stack web app** that helps lawyers quickly understand long legal documents by analyzing uploaded PDFs and generating structured, section-wise summaries with legal intelligence features.
+AI-powered legal document analysis for lawyers, students, and citizens. Upload a PDF and get instant summaries, risk analysis, entity extraction, and plain-English explanations.
 
-The system is a **decision-support and time-saving tool only**. It does **NOT** provide legal advice or predict judgments.
+> **Legal Disclaimer:** LexAnalyze is a decision-support tool only. It does **not** provide legal advice and does not predict legal outcomes. Always consult a qualified legal professional.
 
-### High-Level Architecture
+---
 
-- **Backend**: Python + FastAPI
-  - Modules: OCR, text extraction, preprocessing, document type classifier, section detector, summarization engine, NER, legal citation extractor, similarity engine.
-  - Exposes REST APIs for upload, analysis, summaries, entities, citations, and similar cases.
-- **Frontend**: React (Vite) SPA
-  - Pages/components: Upload page, analysis progress, results dashboard.
+## What it does
 
-### Backend: Setup & Run
+- **Analyses legal PDFs** — extracts text (with OCR fallback for scanned documents) and uses Groq AI (Llama 3) to extract case overview, judgment, sections, and parties.
+- **Chat with Document** — ask questions about the case in plain English and get AI-powered answers.
+- **Multilingual** — translate results into 12 Indian languages.
+- **Legal Dictionary** — hover over legal terms to see plain-English definitions.
+- **Document Templates** — browse, fill, and download common Indian legal templates.
+- **Email Reports** — send analysis reports via Gmail SMTP.
+
+---
+
+## Features
+
+| Feature | Description |
+|---|---|
+| PDF Upload & OCR | Typed and scanned PDFs, up to 10 MB |
+| AI Case Extraction | Groq Llama 3 extracts judges, lawyers, parties, judgment |
+| Similar Case Finder | TF-IDF similarity against reference corpus |
+| Plain English Explainer | Groq AI simplification |
+| Chat with Document | Ask questions about the case |
+| Multilingual Support | 12 Indian languages via Groq AI |
+| Legal Dictionary | 60+ terms with plain-English definitions |
+| Legal Templates | 6 ready-to-use Indian legal document templates |
+| Export to PDF / Word | Branded reports with all analysis data |
+| Email Report | Send reports via Gmail SMTP |
+| Upload History | Persistent localStorage history |
+| Citations Page | All extracted legal citations across documents |
+| Email/Password Auth | JWT-based authentication |
+| Google OAuth | One-click sign-in via Google |
+| Rate Limiting | 10 requests/minute per IP |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.11+, FastAPI, Uvicorn |
+| AI Extraction | Groq API (llama-3.1-8b-instant) |
+| PDF Parsing | pdfplumber, Tesseract OCR |
+| Similarity | scikit-learn TF-IDF |
+| Frontend | React 18, TypeScript, Vite |
+| PDF Export | jsPDF |
+| Word Export | docx |
+| Auth | python-jose (JWT), passlib (bcrypt), Authlib (OAuth) |
+| Email | Gmail SMTP (smtplib) |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.11+
+- Node.js 18+
+- Tesseract OCR ([install guide](https://tesseract-ocr.github.io/tessdoc/Installation.html))
+
+### Backend Setup
 
 ```bash
-cd "legel text analyser"/backend
+cd backend
 
-# (Recommended) create & activate a virtual environment
+# Create and activate virtual environment
 python -m venv .venv
-source .venv/bin/activate      # On Windows: .venv\Scripts\activate
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
-pip install --upgrade pip
 pip install -r requirements.txt
 
-# (Optional but recommended) download spaCy model
-python -m spacy download en_core_web_sm
+# Copy and fill in environment variables
+cp .env.example .env
+# Edit .env with your actual values
 
-# Run the API server
+# Start the API server
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Backend will be available at `http://localhost:8000`. Interactive API docs are at `http://localhost:8000/docs`.
+API available at `http://localhost:8000`  
+Interactive docs at `http://localhost:8000/docs`
 
-### Frontend: Setup & Run
+### Frontend Setup
 
 ```bash
-cd "legel text analyser"/frontend
+cd frontend
 
 npm install
+
+# Copy and fill in environment variables
+cp .env.example .env
+# Edit .env with your actual values
+
 npm run dev
 ```
 
-Frontend dev server will typically run at `http://localhost:5173` (Vite default). It expects the backend at `http://localhost:8000` by default.
+Frontend available at `http://localhost:5173`
 
-### How the Backend Works (Pipeline Overview)
+---
 
-1. **Upload**  
-   - Frontend sends a `multipart/form-data` POST request with a PDF file to `/api/analyze`.
-2. **Text Extraction & OCR**  
-   - `pdfplumber` first tries to extract text directly from the PDF.  
-   - If very little text is found (likely a scanned PDF), the system falls back to Tesseract OCR (`pdf2image` + `pytesseract`) to read text from page images.
-3. **Preprocessing**  
-   - The `clean_extracted_text` function removes page numbers, repeated headers/footers, and collapses excess blank lines.
-4. **Document Type Detection**  
-   - `classify_document_type` uses keyword and structural cues (e.g., “IN THE HIGH COURT OF…”, “THIS AGREEMENT…”) to label the document as Court Judgment, Contract, FIR/Notice, or Other.
-5. **Section Identification**  
-   - `detect_sections` scans for heading patterns (e.g., “Facts of the Case”, “Issues”, “Judgment”) and slices the text into logical sections.
-6. **Summarization & Confidence Scoring**  
-   - `summarize_section` produces a short (3–4 sentence) and a more detailed summary using lead-based heuristics, and assigns a confidence score based on OCR usage, section length, and other simple signals.
-7. **NER & Legal Citations**  
-   - `extract_entities` runs spaCy NER and then infers legal roles (judge, advocate, party, court) from context.  
-   - `extract_citations` uses regex to find IPC/CrPC sections, constitutional articles, and Act names.
-8. **Similar Case Finder**  
-   - `find_similar_cases` converts the document into a TF‑IDF vector and compares it to a small internal corpus (`sample_cases.json`) to return the top similar cases with similarity percentages.
+## Environment Variables
 
-The final structured result is returned to the frontend as a single `AnalysisResponse` JSON object.
+### `backend/.env` (copy from `backend/.env.example`)
 
+| Variable | Description |
+|---|---|
+| `SECRET_KEY` | JWT signing secret — use a long random string in production |
+| `ALLOWED_ORIGINS` | Comma-separated CORS origins |
+| `MAX_FILE_SIZE_MB` | Maximum upload size in MB (default: 10) |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `GOOGLE_REDIRECT_URI` | OAuth callback URL |
+| `FRONTEND_URL` | Frontend base URL (for OAuth redirect) |
+| `GROQ_API_KEY` | Groq API key for AI extraction |
+| `GMAIL_USER` | Gmail address for sending email reports |
+| `GMAIL_APP_PASSWORD` | Gmail App Password (16 chars, not your regular password) |
 
-### Core API Contract (Summary)
+### `frontend/.env` (copy from `frontend/.env.example`)
 
-- **POST** `/api/analyze`
-  - **Content-Type**: `multipart/form-data`
-  - **Body**:
-    - `file`: PDF file (typed or scanned).
-  - **Response (200)**:
-    - `document_id`: string
-    - `document_type`: `"court_judgment" | "contract" | "fir_or_notice" | "other"`
-    - `sections`: list of:
-      - `name`: string
-      - `raw_text`: string
-      - `summary_short`: string
-      - `summary_detailed`: string
-      - `confidence`: float (0–100)
-    - `citations`: list of extracted legal references.
-    - `entities`: list of named entities with labels and positions.
-    - `similar_cases`: list of similar internal cases with similarity scores.
-    - `meta`: miscellaneous metadata (e.g., used_ocr flag, page_count, errors).
+| Variable | Description |
+|---|---|
+| `VITE_API_URL` | Backend URL (default: `http://localhost:8000`) |
+| `VITE_GROQ_API_KEY` | Groq API key for Plain English, Chat, and Translation |
 
-### Notes & Disclaimers
+---
 
-- The NLP and heuristic rules in this project are **illustrative** and should be tuned for your jurisdiction and data.
-- Always have a human lawyer review outputs. This tool does not provide legal advice or predict outcomes.
+## Google OAuth Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials.
+2. Create an **OAuth 2.0 Client ID** (Web application type).
+3. Add `http://localhost:8000/api/auth/google/callback` as an **Authorised redirect URI**.
+4. Copy the Client ID and Secret into `backend/.env`.
+
+## Gmail Email Setup
+
+1. Enable 2-Factor Authentication on your Gmail account.
+2. Go to [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+3. Create an App Password for "Mail".
+4. Add `GMAIL_USER` and `GMAIL_APP_PASSWORD` to `backend/.env`.
+
+---
+
+## Deployment on Render
+
+### Backend
+
+1. Create a new **Web Service** on [Render](https://render.com)
+2. Connect your GitHub repository
+3. Set **Root Directory** to: `backend`
+4. **Build Command:** `pip install -r requirements.txt`
+5. **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+6. Add all environment variables from `backend/.env.example` in the Render dashboard
+
+### Frontend
+
+1. Create a new **Static Site** on Render
+2. Connect your GitHub repository
+3. Set **Root Directory** to: `frontend`
+4. **Build Command:** `npm install && npm run build`
+5. **Publish Directory:** `dist`
+6. Add environment variables:
+   - `VITE_API_URL` = your backend URL from the step above (e.g. `https://lexanalyze-backend.onrender.com`)
+   - `VITE_GROQ_API_KEY` = your Groq API key
+
+> **Note:** After deploying the backend, update `ALLOWED_ORIGINS` in the backend environment variables to include your frontend URL (e.g. `https://lexanalyze-frontend.onrender.com`). Also update `GOOGLE_REDIRECT_URI` and `FRONTEND_URL` to your production URLs.
+
+---
+
+## API Reference
+
+### `POST /api/analyze`
+
+Upload a legal PDF for analysis.
+
+- **Auth:** `Authorization: Bearer <token>` required
+- **Body:** `multipart/form-data` with `file` field (PDF only, max 10 MB)
+- **Returns:** `AnalysisResponse` with case overview, details, and similar cases
+
+### Auth Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Register with email + password |
+| POST | `/api/auth/login` | Login with email + password |
+| GET | `/api/auth/google` | Redirect to Google OAuth |
+| GET | `/api/auth/google/callback` | Google OAuth callback |
+| GET | `/api/auth/me` | Get current user profile |
+| PUT | `/api/auth/profile` | Update full name |
+| PUT | `/api/auth/password` | Change password |
+| DELETE | `/api/auth/account` | Delete account |
+| POST | `/api/email/send-report` | Send analysis report by email |
+
+---
+
+## Built with Groq AI
+
+This app uses the [Groq API](https://groq.com/) with the `llama-3.1-8b-instant` model for:
+- AI-powered case information extraction (backend)
+- Plain English explanations (frontend)
+- Document chat (frontend)
+- Multilingual translation (frontend)

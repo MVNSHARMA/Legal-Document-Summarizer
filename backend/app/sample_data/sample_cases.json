@@ -1,28 +1,149 @@
 [
   {
     "case_id": "CJ-001",
-    "title": "State v. Sharma - Cheating under Section 420 IPC",
-    "document_type": "court_judgment",
-    "text": "IN THE HIGH COURT OF XYZ. State v. Sharma. This criminal appeal concerns allegations of cheating under Section 420 of the Indian Penal Code. The Court examines the factual matrix, the evidence led by the prosecution and defence, and the applicability of Section 420 IPC in light of prior precedents."
+    "title": "State v. Sharma — Cheating under Section 420 IPC",
+    "text": "IN THE HIGH COURT OF XYZ. State v. Sharma. This criminal appeal concerns allegations of cheating under Section 420 of the Indian Penal Code. The Court examines the factual matrix, the evidence led by the prosecution and defence, and the applicability of Section 420 IPC in light of prior precedents.",
+    "issue": "Cheating (IPC Section 420)",
+    "judgment_summary": "Conviction upheld. Accused sentenced to 2 years rigorous imprisonment and fine of Rs. 50,000."
   },
   {
-    "case_id": "CT-001",
-    "title": "Service Agreement between ABC Pvt Ltd and XYZ LLP",
-    "document_type": "contract",
-    "text": "THIS SERVICE AGREEMENT is made on this 5th day of January 2023 between ABC Pvt Ltd (hereinafter referred to as the 'Service Provider') and XYZ LLP (hereinafter referred to as the 'Client'). The parties agree to the following terms and conditions, including scope of services, consideration, indemnity, and termination."
+    "case_id": "CJ-002",
+    "title": "Rajan v. State — Murder under Section 302 IPC",
+    "text": "IN THE SESSIONS COURT. Rajan v. State of Maharashtra. The accused was charged with murder under Section 302 IPC. The prosecution relied on eyewitness testimony and forensic evidence. The defence argued alibi. The court examined the chain of circumstantial evidence.",
+    "issue": "Murder (IPC Section 302)",
+    "judgment_summary": "Accused convicted under Section 302 IPC and sentenced to life imprisonment."
   },
   {
-    "case_id": "FIR-001",
-    "title": "FIR No. 123/2024 relating to alleged theft",
-    "document_type": "fir_or_notice",
-    "text": "FIRST INFORMATION REPORT. FIR No. 123/2024. Police Station: Central. Complainant alleges that on 12 March 2024, unknown persons committed theft of valuable property. The report narrates the sequence of events, description of suspects, and sections invoked under the IPC."
+    "case_id": "CJ-003",
+    "title": "Meena v. State — Bail Application under Section 437 CrPC",
+    "text": "IN THE HIGH COURT. Meena v. State. Bail application filed under Section 437 CrPC. The applicant is accused of offences under Sections 406 and 420 IPC. The court considered the gravity of the offence, criminal antecedents, and likelihood of fleeing.",
+    "issue": "Bail Application (CrPC Section 437)",
+    "judgment_summary": "Bail granted subject to furnishing surety of Rs. 1,00,000 and surrender of passport."
   },
   {
-    "case_id": "OTH-001",
-    "title": "Legal Notice for Breach of Non-Disclosure Obligations",
-    "document_type": "other",
-    "text": "LEGAL NOTICE. Whereas you have failed to comply with your obligations under the Non-Disclosure Agreement dated 10 February 2022, we hereby call upon you to cease and desist from any further disclosure of confidential information, failing which our client shall initiate appropriate legal proceedings."
+    "case_id": "CJ-004",
+    "title": "Kumar v. State — Acquittal in Theft Case Section 379 IPC",
+    "text": "IN THE DISTRICT COURT. Kumar v. State. The accused was charged with theft under Section 379 IPC. The prosecution failed to establish the identity of the accused beyond reasonable doubt. The defence successfully challenged the recovery evidence.",
+    "issue": "Theft (IPC Section 379)",
+    "judgment_summary": "Accused acquitted. Prosecution failed to prove guilt beyond reasonable doubt."
+  },
+  {
+    "case_id": "CJ-005",
+    "title": "Priya v. Suresh — Domestic Violence and Maintenance",
+    "text": "IN THE FAMILY COURT. Priya v. Suresh. Petition filed under the Protection of Women from Domestic Violence Act 2005 and Section 125 CrPC for maintenance. The petitioner alleged physical and mental cruelty. The respondent denied all allegations.",
+    "issue": "Domestic Violence and Maintenance (DV Act, CrPC Section 125)",
+    "judgment_summary": "Respondent directed to pay monthly maintenance of Rs. 15,000 and vacate the shared household."
+  },
+  {
+    "case_id": "CJ-006",
+    "title": "ABC Corp v. XYZ Ltd — Commercial Dispute and Injunction",
+    "text": "IN THE HIGH COURT COMMERCIAL DIVISION. ABC Corporation v. XYZ Limited. Suit for permanent injunction and damages arising from breach of contract and misappropriation of trade secrets. The plaintiff sought interim relief restraining the defendant from using proprietary information.",
+    "issue": "Commercial Dispute — Breach of Contract and Trade Secrets",
+    "judgment_summary": "Interim injunction granted. Defendant restrained from using plaintiff's proprietary information pending trial."
+  },
+  {
+    "case_id": "PIL-001",
+    "title": "Mohini Jain v. State of Karnataka (1992)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Mohini Jain v. State of Karnataka. The petitioner challenged capitation fees charged by private medical colleges as violating the right to education under Article 21 of the Constitution. The Court examined whether right to education is a fundamental right flowing from right to life and dignity.",
+    "issue": "Right to Education as a Fundamental Right",
+    "judgment_summary": "Right to education is part of right to life under Article 21 of Constitution."
+  },
+  {
+    "case_id": "PIL-002",
+    "title": "Unni Krishnan v. State of A.P. (1993)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Unni Krishnan v. State of Andhra Pradesh. The case concerned the right to free education for children up to 14 years of age as a fundamental right under Article 21. The Court held that education is implicit in the right to life and personal liberty.",
+    "issue": "Right to free education for children up to 14 years",
+    "judgment_summary": "Education is implicit in right to life under Article 21. State must provide free education up to age 14."
+  },
+  {
+    "case_id": "PIL-003",
+    "title": "Vishaka v. State of Rajasthan (1997)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Vishaka v. State of Rajasthan. Public interest litigation filed by women's rights groups seeking enforcement of fundamental rights of working women under Articles 14, 19 and 21. The Court laid down binding guidelines for prevention of sexual harassment at workplace.",
+    "issue": "Sexual harassment at workplace, fundamental rights of women",
+    "judgment_summary": "Court issued binding Vishaka guidelines for prevention of sexual harassment at workplace under Articles 14, 19 and 21."
+  },
+  {
+    "case_id": "PIL-004",
+    "title": "K.S. Puttaswamy v. Union of India (2017)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. K.S. Puttaswamy v. Union of India. Nine-judge constitutional bench examined whether right to privacy is a fundamental right under the Constitution. The Court considered Articles 14, 19 and 21 and the right to life and personal liberty.",
+    "issue": "Right to Privacy as a Fundamental Right under Article 21",
+    "judgment_summary": "Privacy is a fundamental right protected under Article 21 of the Constitution of India."
+  },
+  {
+    "case_id": "PIL-005",
+    "title": "Navtej Singh Johar v. Union of India (2018)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Navtej Singh Johar v. Union of India. Constitutional challenge to Section 377 IPC on grounds of violation of Articles 14, 15, 19 and 21. The Court examined dignity, equality and the right to life of LGBTQ+ persons.",
+    "issue": "Decriminalization, dignity and equality under Articles 14 and 21",
+    "judgment_summary": "Section 377 IPC unconstitutional to extent it criminalized consensual acts between adults. Articles 14, 19 and 21 upheld."
+  },
+  {
+    "case_id": "PIL-006",
+    "title": "Society for Unaided Private Schools v. Union of India (2012)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Society for Unaided Private Schools v. Union of India. Challenge to the Right of Children to Free and Compulsory Education Act 2009 (RTE Act). The Court examined whether the RTE Act and Article 21A mandate free education in private unaided schools.",
+    "issue": "Right to free and compulsory education under RTE Act and Article 21A",
+    "judgment_summary": "RTE Act upheld. Free education mandate under Article 21A applies to private unaided schools."
+  },
+  {
+    "case_id": "PIL-007",
+    "title": "Avinash Mehrotra v. Union of India (2009)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Avinash Mehrotra v. Union of India. Public interest litigation concerning right to safe school environment and infrastructure under Article 21A. The Court examined the duty of the State to provide safe school buildings and sanitation facilities.",
+    "issue": "Right to safe school environment under Article 21A",
+    "judgment_summary": "Right to education includes right to safe school infrastructure. State directed to ensure safe school buildings."
+  },
+  {
+    "case_id": "PIL-008",
+    "title": "Joseph Shine v. Union of India (2019)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Joseph Shine v. Union of India. Constitutional challenge to Section 497 IPC on grounds of gender discrimination and violation of Articles 14, 15 and 21. The Court examined substantive equality and the right of women to dignity and autonomy.",
+    "issue": "Gender equality and substantive equality under Article 14",
+    "judgment_summary": "Section 497 IPC struck down as violating substantive equality and dignity of women under Articles 14 and 21."
+  },
+  {
+    "case_id": "PIL-009",
+    "title": "Bandhua Mukti Morcha v. Union of India (1984)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Bandhua Mukti Morcha v. Union of India. Public interest litigation concerning bonded labour and the right to live with dignity under Article 21. The Court examined the right to basic necessities as part of the right to life.",
+    "issue": "Right to live with dignity under Article 21",
+    "judgment_summary": "Right to live with dignity is part of Article 21. State directed to rehabilitate bonded labourers."
+  },
+  {
+    "case_id": "PIL-010",
+    "title": "Consumer Education & Research Centre v. Union of India (1995)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Consumer Education and Research Centre v. Union of India. The Court examined the right to health and medical care as a fundamental right under Article 21. The case concerned occupational health hazards and the duty of the State to protect workers.",
+    "issue": "Right to health as fundamental right under Article 21",
+    "judgment_summary": "Right to health and medical care is a fundamental right under Article 21 of the Constitution."
+  },
+  {
+    "case_id": "PIL-011",
+    "title": "Devika Biswas v. Union of India (2016)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Devika Biswas v. Union of India. Public interest litigation concerning reproductive health rights and the right to dignity under Article 21. The Court examined coercive sterilization practices and the right of women to reproductive autonomy.",
+    "issue": "Right to reproductive health and dignity under Article 21",
+    "judgment_summary": "Right to reproductive health is part of right to life under Article 21. Coercive sterilization violates fundamental rights."
+  },
+  {
+    "case_id": "PIL-012",
+    "title": "Independent Thought v. Union of India (2017)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Independent Thought v. Union of India. The Court examined the rights of the girl child including right to health, education and protection from exploitation under Articles 14, 15 and 21. The case concerned marital rape of minor girls.",
+    "issue": "Rights of girl child including right to health and education",
+    "judgment_summary": "Girl child has right to develop as healthy woman with equal opportunities. Exception to marital rape for minors struck down."
+  },
+  {
+    "case_id": "PIL-013",
+    "title": "Janhit Abhiyan v. Union of India (2023)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Janhit Abhiyan v. Union of India. Constitutional challenge to the 103rd Constitutional Amendment providing 10% reservation for Economically Weaker Sections. The Court examined substantive equality, affirmative action and Articles 14, 15 and 16.",
+    "issue": "Substantive equality and affirmative action under Constitution",
+    "judgment_summary": "EWS reservation upheld. Substantive equality requires affirmative actions to remedy disadvantage under Articles 14, 15 and 16."
+  },
+  {
+    "case_id": "PIL-014",
+    "title": "Rajiv Raturi v. Union of India (2024)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition. Rajiv Raturi v. Union of India. Public interest litigation concerning right to accessibility for persons with disabilities under Articles 14, 19 and 21. The Court examined the duty of the State to ensure accessible infrastructure and services.",
+    "issue": "Right to accessibility for persons with disabilities under Articles 14, 19, 21",
+    "judgment_summary": "Accessibility is a fundamental right enabling exercise of other rights. State directed to implement accessibility standards."
+  },
+  {
+    "case_id": "PIL-015",
+    "title": "Dr. Jaya Thakur v. Government of India (2022)",
+    "text": "IN THE SUPREME COURT OF INDIA. Writ Petition (C) No. 1000 of 2022. Dr. Jaya Thakur v. Government of India. Public interest litigation concerning menstrual hygiene management in schools and the right to education of girl students under Article 21A. The Court examined the duty of States and Union Territories to provide sanitary napkins and proper sanitation facilities in schools.",
+    "issue": "Menstrual Hygiene & Right to Education (Article 21A)",
+    "judgment_summary": "States and Union Territories directed to provide menstrual hygiene facilities in schools. Right to education of girl students under Article 21A upheld."
   }
 ]
-
-
