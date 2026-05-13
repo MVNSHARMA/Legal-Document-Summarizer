@@ -1,48 +1,38 @@
-export interface SectionSummary {
-  name: string;
-  raw_text: string;
-  summary_short: string;
-  summary_detailed: string;
-  confidence: number;
+export interface CaseOverview {
+  judges: string[];
+  lawyers: string[];
+  complainant: string;
+  accused: string;
+  court: string;
+  case_number: string;
 }
 
-export interface Citation {
-  text: string;
-  citation_type: string;
-  context_snippet?: string | null;
-}
-
-export interface Entity {
-  text: string;
-  label: string;
-  role?: string | null;
-  start_char?: number | null;
-  end_char?: number | null;
+export interface CaseDetails {
+  what_happened: string;
+  crime_or_issue: string;
+  sections_involved: string[];
+  judgment: string;
+  judgment_date: string;
+  penalty_or_relief: string;
+  judgment_outcome: string;  // Convicted | Acquitted | Dismissed | Allowed |
+                              // Bail Granted | Bail Rejected | Charge Framed | Unknown
 }
 
 export interface SimilarCase {
-  case_id: string;
   title: string;
-  document_type: string;
-  similarity: number;
-}
-
-export interface AnalysisMeta {
-  filename: string;
-  used_ocr: boolean;
-  page_count: number;
-  errors: string[];
+  similarity_score: number;
+  issue: string;
+  judgment_summary: string;
 }
 
 export interface AnalysisResponse {
   document_id: string;
-  document_type: string;
-  overall_summary: string;
-  sections: SectionSummary[];
-  citations: Citation[];
-  entities: Entity[];
+  filename: string;
+  document_subtype: string;  // e.g. "HC: Criminal Appeal", "SC: Writ Petition", "FIR"
+  case_overview: CaseOverview;
+  case_details: CaseDetails;
   similar_cases: SimilarCase[];
-  meta: AnalysisMeta;
+  used_ocr: boolean;
+  page_count: number;
+  errors: string[];
 }
-
-

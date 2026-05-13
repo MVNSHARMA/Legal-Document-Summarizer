@@ -1,76 +1,170 @@
-import React, { useState } from "react";
-import Header from "./components/Header";
-import UploadPage from "./components/UploadPage";
-import ProgressIndicator from "./components/ProgressIndicator";
-import ResultsDashboard from "./components/ResultsDashboard";
-import { analyzeDocument } from "./api/client";
+import React, { useEffect, useState } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { ToastProvider } from "./components/ToastContainer";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import DashboardPage from "./pages/DashboardPage";
+import ResultsPage from "./pages/ResultsPage";
+import HistoryPage from "./pages/HistoryPage";
+import SettingsPage from "./pages/SettingsPage";
+import CitationsPage from "./pages/CitationsPage";
+import TemplatesPage from "./pages/TemplatesPage";
+import AppLayout from "./components/AppLayout";
 import type { AnalysisResponse } from "./types";
+import { clearOldHistory } from "./utils/history";
 
-type Stage = "upload" | "uploading" | "analyzing" | "results";
+// ─── Protected route ──────────────────────────────────────────────────────────
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
 
-const App: React.FC = () => {
-  const [stage, setStage] = useState<Stage>("upload");
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [analysisData, setAnalysisData] = useState<AnalysisResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  if (isLoading) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--gray-bg)",
+      }}>
+        <div className="gold-spinner" />
+      </div>
+    );
+  }
 
-  const handleAnalyze = async (file: File) => {
-    setError(null);
-    setStage("uploading");
-    setUploadProgress(0);
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+};
 
-    try {
-      const data = await analyzeDocument(file, (percent) => {
-        setUploadProgress(percent);
-      });
-      setStage("results");
-      setAnalysisData(data);
-    } catch (err: unknown) {
-      console.error(err);
-      setError("Failed to analyze document. Please ensure the backend is running and try again.");
-      setStage("upload");
+// ─── Inner app ────────────────────────────────────────────────────────────────
+const InnerApp: React.FC = () => {
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
+  const handleReset = () => setAnalysisResult(null);
+
+  // On first load: purge old-schema history, apply saved theme + font size
+  useEffect(() => {
+    clearOldHistory();
+
+    // Apply saved theme
+    const savedTheme = localStorage.getItem("lex_theme");
+    if (savedTheme === "dark") {
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
     }
-  };
 
-  const handleReset = () => {
-    setAnalysisData(null);
-    setUploadProgress(0);
-    setError(null);
-    setStage("upload");
-  };
-
-  const pipelineStage: "idle" | "uploading" | "analyzing" =
-    stage === "uploading" ? "uploading" : stage === "analyzing" ? "analyzing" : "idle";
+    // Apply saved font size
+    const fontSizeMap: Record<string, string> = {
+      small: "14px", medium: "16px", large: "18px",
+    };
+    const savedFont = localStorage.getItem("lex_font_size") || "medium";
+    document.documentElement.style.setProperty(
+      "--base-font-size",
+      fontSizeMap[savedFont] ?? "16px",
+    );
+  }, []);
 
   return (
-    <div className="page">
-      <Header />
+    <Routes>
+      {/* Public */}
+      <Route path="/login"    element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
 
-      <main className="content">
-        {stage === "results" && analysisData ? (
-          <ResultsDashboard data={analysisData} onReset={handleReset} />
-        ) : (
-          <>
-            <UploadPage
-              onAnalyze={handleAnalyze}
-              isUploading={stage === "uploading"}
-              uploadProgress={uploadProgress}
-              error={error}
-            />
-            <ProgressIndicator stage={pipelineStage} />
-          </>
-        )}
-      </main>
+      {/* Protected — Dashboard */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <AppLayout title="Upload & Analyze">
+              <DashboardPage onResult={setAnalysisResult} />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
 
-      <footer className="footer">
-        <span>
-          This tool is for{" "}
-          <strong>information and time-saving assistance only. It does not provide legal advice</strong>{" "}
-          or predict outcomes.
-        </span>
-      </footer>
-    </div>
+      {/* Protected — Results */}
+      <Route
+        path="/results"
+        element={
+          <ProtectedRoute>
+            {analysisResult ? (
+              <AppLayout title="Analysis Results">
+                <ResultsPage data={analysisResult} onReset={handleReset} />
+              </AppLayout>
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )}
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected — History */}
+      <Route
+        path="/history"
+        element={
+          <ProtectedRoute>
+            <AppLayout title="History">
+              <HistoryPage onSelectResult={setAnalysisResult} />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected — Settings */}
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <AppLayout title="Settings">
+              <SettingsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected — Citations */}
+      <Route
+        path="/citations"
+        element={
+          <ProtectedRoute>
+            <AppLayout title="Citations">
+              <CitationsPage onSelectResult={setAnalysisResult} />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected — Templates */}
+      <Route
+        path="/templates"
+        element={
+          <ProtectedRoute>
+            <AppLayout title="Legal Templates">
+              <TemplatesPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Defaults */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 };
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+const App: React.FC = () => (
+  <ErrorBoundary>
+    <BrowserRouter>
+      <AuthProvider>
+        <ToastProvider>
+          <InnerApp />
+        </ToastProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </ErrorBoundary>
+);
 
 export default App;
