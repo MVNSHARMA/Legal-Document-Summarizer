@@ -28,7 +28,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr
 
-from ..auth import (
+from app.auth import (
     create_access_token,
     create_user,
     get_user_by_email,
@@ -258,7 +258,7 @@ async def update_password(
     user_id: str = Depends(get_current_user_id),
 ):
     """Change the authenticated user's password."""
-    from ..auth import hash_password  # local import to avoid circular
+    from app.auth import hash_password  # absolute import for production
 
     user = get_user_by_id(user_id)
     if user is None:
@@ -291,7 +291,7 @@ async def update_password(
 @router.delete("/account")
 async def delete_account(user_id: str = Depends(get_current_user_id)):
     """Permanently delete the authenticated user's account."""
-    from ..auth import delete_user  # local import
+    from app.auth import delete_user  # absolute import for production
 
     user = get_user_by_id(user_id)
     if user is None:
@@ -325,7 +325,7 @@ async def send_report(
     user_id: str = Depends(get_current_user_id),
 ):
     """Send an analysis report email. Rate-limited to 5 emails per hour per user."""
-    from ..email_service import send_analysis_email
+    from app.email_service import send_analysis_email
 
     # Check Gmail configuration first
     if not os.getenv("GMAIL_USER") or not os.getenv("GMAIL_APP_PASSWORD"):

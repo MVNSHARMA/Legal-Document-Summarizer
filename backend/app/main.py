@@ -10,10 +10,15 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.sessions import SessionMiddleware
 
-from .schemas import AnalysisResponse
-from .pipeline import analyze_document
-from .auth import verify_access_token
-from .routes.auth_routes import router as auth_router, email_router
+# ---------------------------------------------------------------------------
+# Use ABSOLUTE imports so this works both locally and on Render/production.
+# Render runs: uvicorn app.main:app  (from the backend/ directory)
+# so "app" is the top-level package and absolute imports are required.
+# ---------------------------------------------------------------------------
+from app.schemas import AnalysisResponse
+from app.pipeline import analyze_document
+from app.auth import verify_access_token
+from app.routes.auth_routes import router as auth_router, email_router
 
 # ---------------------------------------------------------------------------
 # Environment
@@ -86,16 +91,17 @@ app.add_middleware(
 
 # ---------------------------------------------------------------------------
 # Routers
-# NOTE: auth_router already has prefix="/api/auth" defined on the router itself.
-#       email_router already has prefix="/api/email" defined on the router itself.
-#       Do NOT add a prefix here — it would double the prefix.
+#
+# auth_router  has prefix="/api/auth"  defined in auth_routes.py → routes at /api/auth/*
+# email_router has prefix="/api/email" defined in auth_routes.py → routes at /api/email/*
+# Do NOT add a prefix here — it would double the prefix.
 # ---------------------------------------------------------------------------
 app.include_router(auth_router)
 app.include_router(email_router)
 
 
 # ---------------------------------------------------------------------------
-# Routes
+# Core routes
 # ---------------------------------------------------------------------------
 @app.post("/api/analyze", response_model=AnalysisResponse)
 @limiter.limit("10/minute")
@@ -105,15 +111,8 @@ async def analyze(
     user_id: str = Depends(require_auth),
 ):
     """
-    Upload a legal PDF (typed or scanned) and run the full analysis pipeline.
-
-    Requires:
-    - Valid JWT in Authorization: Bearer <token> header.
-
-    Limits:
-    - Only PDF files accepted.
-    - Maximum file size: 10 MB (configurable via MAX_FILE_SIZE_MB env var).
-    - Rate limit: 10 requests per minute per IP address.
+    Upload a legal PDF and run the full AI analysis pipeline.
+    Requires JWT. Max 10 MB. Rate-limited to 10/minute per IP.
     """
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
@@ -137,7 +136,17 @@ async def analyze(
 
 @app.get("/health")
 async def health_check():
+    """Basic health check — returns 200 if the server is running."""
     return {"status": "ok"}
+
+
+@app.get("/api/test")
+async def test():
+    """Quick smoke-test endpoint to confirm the backend is reachable."""
+    return {
+        "message": "Backend is working!",
+        "routes_registered": True,
+    }
 
 
 @app.get("/api/routes")
@@ -148,14 +157,14 @@ async def list_routes():
         if hasattr(route, "path") and hasattr(route, "methods"):
             routes.append({
                 "path":    route.path,
-                "methods": list(route.methods) if route.methods else [],
+                "methods": sorted(route.methods) if route.methods else [],
             })
         elif hasattr(route, "path"):
             routes.append({"path": route.path, "methods": []})
+    routes.sort(key=lambda r: r["path"])
     return {"total": len(routes), "routes": routes}
 
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
