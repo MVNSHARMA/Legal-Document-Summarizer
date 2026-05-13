@@ -20,6 +20,9 @@ import { clearOldHistory } from "./utils/history";
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Fallback: check localStorage directly in case AuthContext hasn't hydrated yet
+  const hasToken = !!localStorage.getItem("lex_token");
+
   if (isLoading) {
     return (
       <div style={{
@@ -34,7 +37,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  if (!isAuthenticated && !hasToken) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
 };
 
 // ─── Inner app ────────────────────────────────────────────────────────────────

@@ -1,6 +1,10 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+console.log("[Auth] API_BASE:", API_BASE);
+
+// Keep alias so existing axios calls below don't need renaming
+const API_BASE_URL = API_BASE;
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 const TOKEN_KEY = "lex_token";
@@ -64,7 +68,6 @@ export function googleLogin(): void {
 }
 
 export async function getCurrentUser(token: string): Promise<AuthUser> {
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
   const response = await fetch(`${API_BASE}/api/auth/me`, {
     headers: {
       Authorization: `Bearer ${token}`,

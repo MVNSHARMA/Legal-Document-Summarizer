@@ -40,25 +40,21 @@ const LoginPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Handle Google OAuth callback: /login?token=...
-  // Uses window.location.search directly so it works regardless of router state.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    if (token) {
-      console.log("Token found in URL:", token.substring(0, 20));
-      // Save token immediately to localStorage before anything else
-      localStorage.setItem("lex_token", token);
-      login(token)
-        .then(() => {
-          console.log("Login successful, redirecting to dashboard...");
-          window.location.href = "/dashboard";
-        })
-        .catch((err) => {
-          console.error("Login failed:", err);
-          // Even if context fails, token is saved — force redirect anyway
-          window.location.href = "/dashboard";
-        });
-    }
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+    if (!token) return;
+
+    console.log("[Login] Google token received");
+
+    // Clear URL params immediately so token doesn't linger in the address bar
+    window.history.replaceState({}, document.title, "/login");
+
+    // Save token to localStorage
+    localStorage.setItem("lex_token", token);
+
+    // Hard redirect — forces a full page reload which picks up the token
+    window.location.replace("/dashboard");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Already logged in (e.g. returning with a stored session)
