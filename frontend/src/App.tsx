@@ -61,7 +61,7 @@ const InnerApp: React.FC = () => {
   useEffect(() => {
     const pingBackend = async () => {
       try {
-        const API_BASE = import.meta.env.VITE_API_URL || "https://lexanalyze-backend.onrender.com";
+        const API_BASE = (import.meta.env.VITE_API_URL || "https://lexanalyze-backend.onrender.com").replace(/\/+$/, "");
         await fetch(`${API_BASE}/health`);
         console.log("[KeepAlive] Backend pinged");
       } catch {

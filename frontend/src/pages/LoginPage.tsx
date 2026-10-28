@@ -65,7 +65,9 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE}/api/auth/google`;
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const redirectParam = origin ? `?redirect_to=${encodeURIComponent(origin)}` : "";
+    window.location.href = `${API_BASE}/api/auth/google${redirectParam}`;
   };
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -217,11 +219,16 @@ export default function LoginPage() {
                 color: "#c9a84c", border: "none", borderRadius: 8,
                 fontSize: 15, fontWeight: 600,
                 cursor: loading ? "not-allowed" : "pointer",
-                marginBottom: 16,
+                marginBottom: loading ? 8 : 16,
               }}
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
+            {loading && (
+              <p style={{ fontSize: 12, color: "#6b7280", textAlign: "center", margin: "0 0 16px 0" }}>
+                Connecting to backend (free-tier server takes ~20s if waking up)...
+              </p>
+            )}
           </form>
 
           {/* Divider */}

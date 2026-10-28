@@ -44,21 +44,36 @@ function collectDates(data: AnalysisResponse): DateItem[] {
     items.push({ date, source, snippet: snippet.slice(0, 80), sortKey: tryParseDate(date) });
   };
 
-  // 1. DATE entities from case_details sections_involved (no entities array in new schema)
-  // Use sections_involved as date-adjacent context
-  const dateEntities: string[] = data.case_details.sections_involved;
-  for (const s of dateEntities) {
-    add(s, "Sections", s);
+  // 1. Judgment date
+  if (data.case_details.judgment_date && data.case_details.judgment_date !== "Not identified") {
+    add(
+      data.case_details.judgment_date,
+      "Judgment Date",
+      `Judgment delivered on ${data.case_details.judgment_date}`,
+    );
   }
 
-  // 2. Scan case_details fields for deadline keywords
+  // 2. Scan case_details fields for deadline keywords and dates
   const fieldsToScan = [
     { text: data.case_details.what_happened, source: "What Happened" },
     { text: data.case_details.judgment,      source: "Judgment" },
     { text: data.case_details.penalty_or_relief, source: "Penalty / Relief" },
   ];
+
+  const datePattern = /\b(?:\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d{1,2}(?:st|nd|rd|th)?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4})\b/gi;
+
   for (const field of fieldsToScan) {
     if (!field.text) continue;
+
+    // Scan for dates
+    let match;
+    while ((match = datePattern.exec(field.text)) !== null) {
+      const dateStr = match[0];
+      const snippet = extractSnippet(field.text, dateStr);
+      add(dateStr, field.source, snippet);
+    }
+
+    // Scan for deadline keywords
     for (const kw of DEADLINE_KEYWORDS) {
       if (field.text.toLowerCase().includes(kw.toLowerCase())) {
         const snippet = extractSnippet(field.text, kw);

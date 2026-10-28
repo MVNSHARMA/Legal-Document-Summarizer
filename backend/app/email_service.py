@@ -44,7 +44,10 @@ def send_analysis_email(
         ValueError: If Gmail credentials are not configured.
         Exception:  If sending fails (caller should handle).
     """
-    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+    gmail_user = (os.getenv("GMAIL_USER") or "").strip()
+    gmail_app_password = (os.getenv("GMAIL_APP_PASSWORD") or "").replace(" ", "").strip()
+
+    if not gmail_user or not gmail_app_password:
         raise ValueError(
             "Gmail credentials not configured. "
             "Set GMAIL_USER and GMAIL_APP_PASSWORD in backend/.env"
@@ -193,7 +196,7 @@ Always consult a qualified lawyer."""
 
     # ── Send via Gmail SMTP SSL ─────────────────────────────────────────────
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-        server.sendmail(GMAIL_USER, recipient_email, msg.as_string())
+        server.login(gmail_user, gmail_app_password)
+        server.sendmail(gmail_user, recipient_email, msg.as_string())
 
     return True

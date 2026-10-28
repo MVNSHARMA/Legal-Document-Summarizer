@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { getGroqApiKey, GROQ_MODEL } from "../config";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ChatMessage {
@@ -150,7 +151,7 @@ const DocumentChat: React.FC<DocumentChatProps> = ({
     setInput("");
     setLoading(true);
 
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY ?? "";
+    const apiKey = getGroqApiKey();
 
     // Build chat history for context (last 6 non-welcome messages)
     const historyForApi = messages
@@ -203,7 +204,7 @@ ${penaltyOrRelief}
 8. If truly not in the above info, say: "This specific detail was not extracted from the document."`;
 
     try {
-      if (!apiKey) throw new Error("VITE_GROQ_API_KEY is not set in frontend/.env");
+      if (!apiKey) throw new Error("VITE_GROQ_API_KEY is not configured.");
 
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -212,7 +213,7 @@ ${penaltyOrRelief}
           "Authorization": `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model:      "llama-3.1-8b-instant",
+          model:      GROQ_MODEL,
           max_tokens: 800,
           messages: [
             { role: "system", content: systemPrompt },

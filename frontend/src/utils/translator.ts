@@ -3,6 +3,8 @@
  * Translates legal text while preserving names, case numbers, and legal terms.
  */
 
+import { getGroqApiKey, GROQ_MODEL } from "../config";
+
 const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
 
 // ─── Single field translation ─────────────────────────────────────────────────
@@ -15,7 +17,7 @@ export async function translateText(
   if (targetLanguage === "en") return text;
   if (!text || text === "Not available" || text === "Not identified") return text;
 
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY ?? "";
+  const apiKey = getGroqApiKey();
   if (!apiKey) return text;
 
   try {
@@ -26,7 +28,7 @@ export async function translateText(
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model:      "llama-3.1-8b-instant",
+        model:      GROQ_MODEL,
         max_tokens: 1000,
         messages: [
           {

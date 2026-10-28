@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
+import bcrypt
 from dotenv import load_dotenv
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -30,7 +31,10 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
 # Path to the flat-file user store (created automatically if absent)
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+# Check both backend/data and root data directory for Render/local compatibility
+_backend_data = Path(__file__).resolve().parent.parent / "data"
+_root_data = Path(__file__).resolve().parent.parent.parent / "data"
+DATA_DIR = _backend_data if _backend_data.exists() else _root_data
 USERS_FILE = DATA_DIR / "users.json"
 
 # ---------------------------------------------------------------------------
@@ -145,7 +149,7 @@ def create_user(
     if get_user_by_email(email):
         raise ValueError(f"Email already registered: {email}")
 
-    hashed = pwd_context.hash(password) if password else None
+    hashed = hash_password(password) if password else None
     user = User(
         id=str(uuid.uuid4()),
         email=email.lower().strip(),
@@ -172,12 +176,21 @@ def update_user(user: User) -> None:
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    """Verify plain password against bcrypt hash safely."""
+    try:
+        pwd_bytes = plain.encode("utf-8")[:72]
+        return bcrypt.checkpw(pwd_bytes, hashed.encode("utf-8"))
+    except Exception:
+        try:
+            return pwd_context.verify(plain, hashed)
+        except Exception:
+            return False
 
 
 def hash_password(plain: str) -> str:
-    """Hash a plain-text password."""
-    return pwd_context.hash(plain)
+    """Hash a plain-text password using bcrypt directly with 72-byte safe truncation."""
+    pwd_bytes = plain.encode("utf-8")[:72]
+    return bcrypt.hashpw(pwd_bytes, bcrypt.gensalt()).decode("utf-8")
 
 
 def delete_user(user_id: str) -> None:

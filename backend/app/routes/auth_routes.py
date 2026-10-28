@@ -165,8 +165,10 @@ async def login(body: LoginRequest):
 
 
 @router.get("/google")
-async def google_login(request: Request):
+async def google_login(request: Request, redirect_to: str | None = None):
     """Redirect the browser to Google's OAuth consent screen."""
+    if redirect_to:
+        request.session["oauth_redirect_to"] = redirect_to
     return await oauth.google.authorize_redirect(request, GOOGLE_REDIRECT_URI)
 
 
@@ -215,7 +217,9 @@ async def google_callback(request: Request):
 
     jwt_token = create_access_token(subject=user.id)
     # Redirect to the frontend login page — LoginPage reads ?token= and completes sign-in
-    redirect_url = f"{FRONTEND_URL}/login?token={jwt_token}"
+    target_frontend = request.session.pop("oauth_redirect_to", None) or FRONTEND_URL
+    target_frontend = target_frontend.rstrip("/")
+    redirect_url = f"{target_frontend}/login?token={jwt_token}"
     return RedirectResponse(url=redirect_url)
 
 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import type { AnalysisResponse } from "../types";
+import { getGroqApiKey, GROQ_MODEL } from "../config";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const LanguageIcon = () => (
@@ -50,7 +51,7 @@ const PlainLanguageCard: React.FC<PlainLanguageCardProps> = ({ data }) => {
     if (state === "done" && result) return; // use cached result
 
     // Guard: require Groq API key
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY ?? "";
+    const apiKey = getGroqApiKey();
     if (!apiKey) {
       setState("error");
       setErrorMsg(
@@ -70,7 +71,7 @@ const PlainLanguageCard: React.FC<PlainLanguageCardProps> = ({ data }) => {
           "Authorization": `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: GROQ_MODEL,
           max_tokens: 1000,
           messages: [
             {

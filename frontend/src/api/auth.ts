@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const API_BASE = import.meta.env.VITE_API_URL || "https://lexanalyze-backend.onrender.com";
+export const API_BASE = (import.meta.env.VITE_API_URL || "https://lexanalyze-backend.onrender.com").replace(/\/+$/, "");
 console.log("[AUTH] Using API:", API_BASE);
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
@@ -60,8 +60,10 @@ export async function loginUser(
 }
 
 export function googleLogin(): void {
-  // Full-page redirect — backend handles the OAuth flow
-  window.location.href = `${API_BASE}/api/auth/google`;
+  // Full-page redirect — backend handles the OAuth flow and redirects back to caller origin
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const redirectParam = origin ? `?redirect_to=${encodeURIComponent(origin)}` : "";
+  window.location.href = `${API_BASE}/api/auth/google${redirectParam}`;
 }
 
 export async function getCurrentUser(token: string): Promise<AuthUser> {

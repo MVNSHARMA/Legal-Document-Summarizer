@@ -9,6 +9,8 @@ import LegalDictionary from "../components/LegalDictionary";
 import DocumentChat from "../components/DocumentChat";
 import LanguageSelector from "../components/LanguageSelector";
 import EmailReportModal from "../components/EmailReportModal";
+import RiskHighlighter from "../components/RiskHighlighter";
+import DeadlinesCard from "../components/DeadlinesCard";
 import { translateCaseDetails, type TranslatableDetails } from "../utils/translator";
 import { INDIAN_LANGUAGES, type Language } from "../data/languages";
 import { useToast } from "../hooks/useToast";
@@ -592,6 +594,12 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ data, onReset }) => {
         displayJudgment={displayJudgment}
         displayPenaltyOrRelief={displayPenaltyOrRelief}
       />
+      <div style={{ marginBottom: 20 }}>
+        <RiskHighlighter data={data} />
+      </div>
+      <div style={{ marginBottom: 20 }}>
+        <DeadlinesCard data={data} />
+      </div>
       <SimilarCasesSection cases={data.similar_cases} />
 
       <StickyBar

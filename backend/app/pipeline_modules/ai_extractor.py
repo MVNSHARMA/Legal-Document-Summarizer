@@ -110,19 +110,39 @@ def extract_with_ai(text: str) -> Dict[str, Any]:
         print(f"[AI Extractor] Sending {len(truncated)} chars to Groq")
 
         client = _get_client()
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",   # FIX 2: faster, more reliable model
-            messages=[
-                {
-                    "role": "user",
-                    "content": EXTRACTION_PROMPT + truncated,
-                }
-            ],
-            temperature=0.1,
-            max_tokens=1500,               # FIX 2: reduced to avoid timeouts
-        )
+        candidate_models = ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "llama-3.1-8b-instant"]
+        last_error = None
 
-        raw = response.choices[0].message.content.strip()
+        for model_name in candidate_models:
+            try:
+                print(f"[AI Extractor] Attempting extraction with model: {model_name}")
+                kwargs = {
+                    "model": model_name,
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": EXTRACTION_PROMPT + truncated,
+                        }
+                    ],
+                    "temperature": 0.1,
+                    "max_tokens": 1500,
+                }
+                if "qwen" in model_name:
+                    kwargs["response_format"] = {"type": "json_object"}
+
+                response = client.chat.completions.create(**kwargs)
+                raw = response.choices[0].message.content.strip()
+                if raw:
+                    print(f"[AI Extractor] Succeeded with model: {model_name}")
+                    break
+            except Exception as m_err:
+                print(f"[AI Extractor] Failed with model {model_name}: {m_err}")
+                last_error = m_err
+                continue
+        else:
+            if last_error:
+                raise last_error
+
         print(f"[AI Extractor] Raw response (first 200 chars): {raw[:200]}")
 
         # FIX 1: More aggressive JSON cleaning
