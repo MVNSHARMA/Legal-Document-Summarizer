@@ -19,6 +19,7 @@ from app.schemas import AnalysisResponse
 from app.pipeline import analyze_document
 from app.auth import verify_access_token
 from app.routes.auth_routes import router as auth_router, email_router
+from app.routes.ai_routes import router as ai_router
 
 # ---------------------------------------------------------------------------
 # Environment
@@ -99,6 +100,7 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 app.include_router(auth_router)
 app.include_router(email_router)
+app.include_router(ai_router)
 
 
 # ---------------------------------------------------------------------------

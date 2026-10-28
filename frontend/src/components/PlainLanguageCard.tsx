@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { AnalysisResponse } from "../types";
-import { getGroqApiKey, GROQ_MODEL } from "../config";
+import { getGroqApiKey, GROQ_MODEL, API_BASE } from "../config";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const LanguageIcon = () => (
@@ -50,56 +50,73 @@ const PlainLanguageCard: React.FC<PlainLanguageCardProps> = ({ data }) => {
   const handleExplain = async () => {
     if (state === "done" && result) return; // use cached result
 
-    // Guard: require Groq API key
     const apiKey = getGroqApiKey();
-    if (!apiKey) {
-      setState("error");
-      setErrorMsg(
-        "Plain English feature requires a Groq API key. Add VITE_GROQ_API_KEY to your frontend .env file."
-      );
-      return;
-    }
-
     setState("loading");
     setErrorMsg(null);
 
     try {
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          max_tokens: 1000,
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a legal document simplifier. Explain legal documents in simple plain English that a non-lawyer can understand. Use short sentences. Avoid legal jargon.",
-            },
-            {
-              role: "user",
-              content:
-                `Explain this legal document summary in simple plain English. Structure your response EXACTLY like this:\n\nWHAT IS THIS: (one sentence explaining what this document is)\nKEY POINTS:\n• (point 1)\n• (point 2)\n• (point 3)\nWHAT YOU SHOULD KNOW: (2-3 sentences of practical advice for a non-lawyer)\n\nDocument type: ${data.case_details.crime_or_issue}\nSummary: ${data.case_details.what_happened}`,
-            },
-          ],
-        }),
-      });
+      let text = "";
 
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(
-          (err as { error?: { message?: string } })?.error?.message ??
-            `Groq API error ${response.status}`
-        );
+      // 1. Try direct Groq if client key is configured
+      if (apiKey) {
+        try {
+          const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model: GROQ_MODEL,
+              max_tokens: 1000,
+              messages: [
+                {
+                  role: "system",
+                  content:
+                    "You are a legal document simplifier. Explain legal documents in simple plain English that a non-lawyer can understand. Use short sentences. Avoid legal jargon.",
+                },
+                {
+                  role: "user",
+                  content:
+                    `Explain this legal document summary in simple plain English. Structure your response EXACTLY like this:\n\nWHAT IS THIS: (one sentence explaining what this document is)\nKEY POINTS:\n• (point 1)\n• (point 2)\n• (point 3)\nWHAT YOU SHOULD KNOW: (2-3 sentences of practical advice for a non-lawyer)\n\nDocument type: ${data.case_details.crime_or_issue}\nSummary: ${data.case_details.what_happened}`,
+                },
+              ],
+            }),
+          });
+
+          if (response.ok) {
+            const json = await response.json() as {
+              choices: Array<{ message: { content: string } }>;
+            };
+            text = json.choices[0]?.message?.content ?? "";
+          }
+        } catch (clientErr) {
+          console.warn("[PlainLanguageCard] Client Groq call failed, falling back to backend:", clientErr);
+        }
       }
 
-      const json = await response.json() as {
-        choices: Array<{ message: { content: string } }>;
-      };
-      const text = json.choices[0]?.message?.content ?? "";
+      // 2. Fall back to secure backend proxy (Render)
+      if (!text) {
+        const response = await fetch(`${API_BASE}/api/ai/explain`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            document_type: data.case_details.crime_or_issue || "",
+            summary: data.case_details.what_happened || "",
+          }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(
+            (err as { detail?: string })?.detail ?? `Explanation failed (status ${response.status})`
+          );
+        }
+
+        const json = await response.json() as { content: string };
+        text = json.content;
+      }
+
       setResult(parseResponse(text));
       setState("done");
     } catch (err: unknown) {

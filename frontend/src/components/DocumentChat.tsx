@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { getGroqApiKey, GROQ_MODEL } from "../config";
+import { getGroqApiKey, GROQ_MODEL, API_BASE } from "../config";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ChatMessage {
@@ -204,42 +204,65 @@ ${penaltyOrRelief}
 8. If truly not in the above info, say: "This specific detail was not extracted from the document."`;
 
     try {
-      if (!apiKey) throw new Error("VITE_GROQ_API_KEY is not configured.");
+      let reply = "";
+      const chatMessages = [
+        { role: "system", content: systemPrompt },
+        ...historyForApi,
+        { role: "user", content: trimmed },
+      ];
 
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type":  "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model:      GROQ_MODEL,
-          max_tokens: 800,
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...historyForApi,
-            { role: "user", content: trimmed },
-          ],
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(
-          (err as { error?: { message?: string } })?.error?.message ??
-            `Groq API error ${res.status}`,
-        );
+      // 1. Try direct Groq if client has key configured
+      if (apiKey) {
+        try {
+          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type":  "application/json",
+              "Authorization": `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model:      GROQ_MODEL,
+              max_tokens: 800,
+              messages:   chatMessages,
+            }),
+          });
+          if (res.ok) {
+            const json = await res.json() as {
+              choices: Array<{ message: { content: string } }>;
+            };
+            reply = json.choices[0]?.message?.content ?? "";
+          }
+        } catch (clientErr) {
+          console.warn("[DocumentChat] Client-side Groq call failed, falling back to backend:", clientErr);
+        }
       }
 
-      const json = await res.json() as {
-        choices: Array<{ message: { content: string } }>;
-      };
-      const reply = json.choices[0]?.message?.content ?? "Sorry, I couldn't generate a response.";
+      // 2. Fall back to secure backend proxy (Render)
+      if (!reply) {
+        const res = await fetch(`${API_BASE}/api/ai/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: chatMessages,
+            max_tokens: 800,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(
+            (err as { detail?: string })?.detail ?? `Chat failed with status ${res.status}`
+          );
+        }
+
+        const json = await res.json() as { content: string };
+        reply = json.content;
+      }
 
       const aiMsg: ChatMessage = {
         id:        `a-${Date.now()}`,
         role:      "assistant",
-        content:   reply,
+        content:   reply || "Sorry, I couldn't generate a response.",
         timestamp: new Date(),
       };
 
